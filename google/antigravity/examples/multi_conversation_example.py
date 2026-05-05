@@ -25,7 +25,7 @@ Probes the boundaries of LocalConnection lifecycle:
   3. Disconnect:  Does disconnect() cleanly kill the subprocess?
 
 To run:
-  bazel run //examples:multi_conversation
+  python multi_conversation_example.py
 """
 
 import asyncio

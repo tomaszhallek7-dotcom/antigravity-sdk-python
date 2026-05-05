@@ -32,7 +32,7 @@ explicit round management and prompt injection. See agent_async_chat.py
 for a fully reactive alternative using asyncio.Condition.
 
 Run:
-    bazel run //examples/agents:agent_chat_room
+    python agent_chat_room.py
 """
 
 import asyncio
@@ -237,8 +237,7 @@ async def main():
     print(f"📋 Transcript ({len(room.history)} turns)")
     print(f"{'='*60}")
     for i, (name, text) in enumerate(room.history, 1):
-      preview = text[:80] + "..." if len(text) > 80 else text
-      print(f"  {i}. [{name}]: {preview}")
+      print(f"  {i}. [{name}]: {text}")
 
 
 if __name__ == "__main__":

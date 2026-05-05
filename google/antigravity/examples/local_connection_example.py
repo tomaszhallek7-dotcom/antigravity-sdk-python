@@ -22,7 +22,7 @@ This example shows how to:
 5. Run an interactive conversation loop using the Conversation API.
 
 To run:
-  bazel run //examples:local_connection
+  python local_connection_example.py
 
 Tip: Pass --alsologtostderr to see execution steps in detail.
 """

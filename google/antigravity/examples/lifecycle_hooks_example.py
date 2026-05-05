@@ -41,7 +41,7 @@ Observing model responses:
   for the full step-by-step trajectory.
 
 To run:
-  bazel run //examples:lifecycle_hooks
+  python lifecycle_hooks_example.py
 """
 
 import asyncio
@@ -80,7 +80,7 @@ class LogPreTurn(hooks.PreTurnHook):
   """Logs the user prompt before each turn. Always allows."""
 
   async def run(self, context, data) -> types.HookResult:
-    print(f"[Hook] Pre-turn — user prompt: {data!r:.80}")
+    print(f"[Hook] Pre-turn — user prompt: {data!r}")
     return types.HookResult(allow=True)
 
 
@@ -88,7 +88,7 @@ class LogPostTurn(hooks.PostTurnHook):
   """Logs the final model response after each turn."""
 
   async def run(self, context, data):
-    print(f"[Hook] Post-turn — response: {data!r:.80}")
+    print(f"[Hook] Post-turn — response: {data!r}")
 
 
 class LogPreToolCallDecide(hooks.PreToolCallDecideHook):
