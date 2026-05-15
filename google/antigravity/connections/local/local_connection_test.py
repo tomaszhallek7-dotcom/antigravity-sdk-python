@@ -3021,6 +3021,77 @@ class LocalConnectionSendTest(unittest.IsolatedAsyncioTestCase):
     self.assertEqual(parts[1]["media"]["mimeType"], "application/pdf")
     self.assertEqual(parts[1]["media"]["data"], "ZmFrZV9wZGY=")  # b"fake_pdf"
 
+  async def test_concurrent_receive_steps_raises(self):
+    """Verifies that a second concurrent receive_steps() call raises RuntimeError.
+
+    The connection sets _is_receiving on entry and clears it on exit.
+    A second caller must fail immediately with a clear message rather than
+    silently racing on the shared step queue.
+    """
+    harness = test_utils.TestLocalHarness(
+        test_case=self,
+        process=self.mock_process,
+    )
+    # Put the connection into a non-idle state so receive_steps blocks
+    # waiting for steps.
+    harness.conn._is_idle.clear()
+
+    first_started = asyncio.Event()
+
+    async def _first_receiver():
+      first_started.set()
+      async for _ in harness.conn.receive_steps():
+        pass  # Will block on the queue until idle or close sentinel.
+
+    task = asyncio.create_task(_first_receiver())
+    await first_started.wait()
+    # Give the first receiver a moment to enter the iterator body.
+    await asyncio.sleep(0.05)
+
+    with self.assertRaises(RuntimeError) as ctx:
+      async for _ in harness.conn.receive_steps():
+        pass
+
+    self.assertIn(
+        "Concurrent receive_steps() calls are not supported", str(ctx.exception)
+    )
+
+    # Clean up: signal idle so the first receiver can exit.
+    harness.conn._is_idle.set()
+    await harness.conn._step_queue.put(local_connection._IDLE_SENTINEL)
+    task.cancel()
+    try:
+      await task
+    except asyncio.CancelledError:
+      pass
+
+  async def test_trigger_notification_succeeds_while_busy(self):
+    """Verifies send_trigger_notification() and send() work during an active turn.
+
+    There is no connection-level guard on sending while a receive is in
+    progress. Callers (e.g. scheduled triggers) must be able to inject
+    new prompts even when steps are still being consumed.
+    """
+    harness = test_utils.TestLocalHarness(
+        test_case=self,
+        process=self.mock_process,
+    )
+    # Start a turn so the connection is non-idle.
+    await harness.conn.send("initial prompt")
+    initial_msg = await harness.wait_for_response()
+    self.assertEqual(initial_msg.get("userInput"), "initial prompt")
+
+    # send_trigger_notification should succeed even though we are mid-turn.
+    await harness.conn.send_trigger_notification("trigger content")
+    trigger_msg = await harness.wait_for_response()
+    self.assertIn("automatedTrigger", trigger_msg)
+    self.assertEqual(trigger_msg["automatedTrigger"], "trigger content")
+
+    # A regular send() should also succeed (no send-side guard).
+    await harness.conn.send("follow-up prompt")
+    followup_msg = await harness.wait_for_response()
+    self.assertEqual(followup_msg.get("userInput"), "follow-up prompt")
+
 
 class LocalAgentConfigTest(unittest.TestCase):
 

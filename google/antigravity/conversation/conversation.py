@@ -113,13 +113,25 @@ class Conversation:
   ) -> None:
     """Sends a message to the agent.
 
-    Records a turn boundary in the history before sending.
+    If a turn is still in progress, drains all remaining steps into
+    history before sending the new message.  When another coroutine is
+    already iterating ``receive_steps()`` (and therefore recording steps
+    into history), falls back to ``wait_for_idle()``.
 
     Args:
       prompt: The user message to send.
       **kwargs: Strategy-specific options.
     """
-    await self.wait_for_idle()
+    if not self._connection.is_idle:
+      try:
+        async for _ in self.receive_steps():
+          pass
+      except RuntimeError:
+        # Catches the async generator "already running" error from
+        # Python's runtime.  Intentionally broad: any RuntimeError here
+        # means we cannot drain, so falling back to wait_for_idle() is
+        # safe since the active iterator is already preserving steps.
+        await self._connection.wait_for_idle()
     self._turn_start_indices.append(len(self._steps))
     self._turn_usage = None
     await self._connection.send(prompt, **kwargs)

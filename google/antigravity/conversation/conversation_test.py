@@ -68,19 +68,21 @@ class ConversationCreateTest(unittest.IsolatedAsyncioTestCase):
 class ConversationSendTest(unittest.IsolatedAsyncioTestCase):
   """Validates send behavior including idle-wait and turn tracking."""
 
-  async def test_send_waits_for_idle_then_delegates(self):
-    """Verifies send calls wait_for_idle before delegating to connection."""
+  async def test_send_when_idle_delegates_directly(self):
+    """When already idle, send() delegates to connection without draining."""
     mock_connection = mock.AsyncMock(spec=connection.Connection)
+    type(mock_connection).is_idle = mock.PropertyMock(return_value=True)
     conv = conversation.Conversation(mock_connection)
 
     await conv.send("hello")
 
-    mock_connection.wait_for_idle.assert_called_once()
     mock_connection.send.assert_called_once_with("hello")
+    mock_connection.receive_steps.assert_not_called()
 
   async def test_send_multimodal_input(self):
     """Verifies that send accepts multimodal Content payloads and delegates to connection."""
     mock_connection = mock.AsyncMock(spec=connection.Connection)
+    type(mock_connection).is_idle = mock.PropertyMock(return_value=True)
     conv = conversation.Conversation(mock_connection)
 
     multimodal_prompt = [
@@ -89,12 +91,12 @@ class ConversationSendTest(unittest.IsolatedAsyncioTestCase):
     ]
     await conv.send(multimodal_prompt)
 
-    mock_connection.wait_for_idle.assert_called_once()
     mock_connection.send.assert_called_once_with(multimodal_prompt)
 
   async def test_send_records_turn_boundary(self):
     """Verifies each send records a turn boundary index in the history."""
     mock_connection = mock.AsyncMock(spec=connection.Connection)
+    type(mock_connection).is_idle = mock.PropertyMock(return_value=True)
     conv = conversation.Conversation(mock_connection)
 
     await conv.send("first")
@@ -947,6 +949,116 @@ class ConversationUsageMetadataTest(unittest.IsolatedAsyncioTestCase):
     await result.resolve()
 
     self.assertIsNone(result.usage_metadata)
+
+
+class ConversationSendDrainTest(unittest.IsolatedAsyncioTestCase):
+  """Validates send() drain-to-history when a prior turn has not been consumed."""
+
+  def _make_conn(self):
+    """Returns a mock Connection with is_idle as a controllable property."""
+    mock_connection = mock.MagicMock(spec=connection.Connection)
+    mock_connection.send = mock.AsyncMock()
+    mock_connection.wait_for_idle = mock.AsyncMock()
+    return mock_connection
+
+  async def test_back_to_back_send_drains_first_turn(self):
+    """A second send() auto-drains the first turn's steps into history.
+
+    Simulates two send/receive cycles where the caller never explicitly
+    iterates receive_steps() after the first send. The second send() should
+    detect that the connection is not idle, drain the pending steps from
+    the first turn, and then proceed normally.
+    """
+    mock_connection = self._make_conn()
+
+    step_turn1 = _make_step("first reply", step_index=1, is_final=True)
+    step_turn2 = _make_step("second reply", step_index=2, is_final=True)
+
+    # Track which generator call we're on.
+    receive_call_count = 0
+
+    async def gen_turn1():
+      yield step_turn1
+
+    async def gen_turn2():
+      yield step_turn2
+
+    def receive_steps_side_effect():
+      nonlocal receive_call_count
+      receive_call_count += 1
+      if receive_call_count <= 2:
+        # Call 1: from explicit send-drain; Call 2: from explicit iteration.
+        # Both use turn1's generator initially, but we switch after send.
+        return gen_turn1()
+      return gen_turn2()
+
+    mock_connection.receive_steps.side_effect = receive_steps_side_effect
+
+    # is_idle starts False (turn in progress), then True after drain,
+    # then False again (second turn in progress), then True.
+    type(mock_connection).is_idle = mock.PropertyMock(
+        side_effect=[False, True]
+    )
+
+    conv = conversation.Conversation(mock_connection)
+
+    # First send: connection is idle at construction, so we configure idle=False
+    # to trigger the drain path.
+    await conv.send("first question")
+
+    # Caller does NOT iterate receive_steps; immediately sends again.
+    # send() sees is_idle=False, drains via receive_steps(), which captures
+    # step_turn1 into history.
+    await conv.send("second question")
+
+    # At this point, the drain from the second send should have captured
+    # step_turn1 into history.
+    self.assertEqual(len(conv.history), 1)
+    self.assertEqual(conv.history[0].content, "first reply")
+    self.assertEqual(conv.turn_count, 2)
+
+    # Now explicitly drain the second turn.
+    mock_connection.receive_steps.side_effect = None
+    mock_connection.receive_steps.return_value = gen_turn2()
+    async for _ in conv.receive_steps():
+      pass
+
+    # Both turns should now be in history.
+    self.assertEqual(len(conv.history), 2)
+    self.assertEqual(conv.history[0].content, "first reply")
+    self.assertEqual(conv.history[1].content, "second reply")
+
+  async def test_send_falls_back_to_wait_for_idle_on_runtime_error(self):
+    """Concurrent receive_steps() triggers wait_for_idle() fallback.
+
+    When another coroutine is already iterating receive_steps(), send()
+    catches RuntimeError and falls back to wait_for_idle().
+
+    This covers the case where two coroutines race: one is already draining
+    steps (and recording them into history), while the other tries to send
+    a new prompt. The RuntimeError from the async generator signals that
+    it's already in use, so send() just waits for the connection to go idle.
+    """
+    mock_connection = self._make_conn()
+
+    type(mock_connection).is_idle = mock.PropertyMock(return_value=False)
+
+    # Make receive_steps() raise RuntimeError, simulating a generator
+    # that is already being iterated by another coroutine.
+    async def raise_runtime_error():
+      raise RuntimeError("anext: asynchronous generator is already running")
+      yield  # pragma: no cover  # Makes this an async generator.  # pylint: disable=unreachable
+
+    mock_connection.receive_steps.return_value = raise_runtime_error()
+
+    conv = conversation.Conversation(mock_connection)
+    await conv.send("prompt while draining")
+
+    # The RuntimeError was caught; wait_for_idle was called as fallback.
+    mock_connection.wait_for_idle.assert_called_once()
+    # send still proceeded after the fallback.
+    mock_connection.send.assert_called_once_with("prompt while draining")
+    self.assertEqual(conv.turn_count, 1)
 
 
 if __name__ == "__main__":
