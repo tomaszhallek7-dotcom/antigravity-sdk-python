@@ -30,9 +30,8 @@ Criteria for correct script performance:
 import asyncio
 from typing import Any
 
-from google.antigravity import agent
 from google.antigravity import types
-from google.antigravity.connections import local
+from google.antigravity import Agent, LocalAgentConfig
 from google.antigravity.hooks import hooks
 
 # -----------------------------------------------------------------------------
@@ -135,7 +134,7 @@ def broken_tool() -> str:
 
 
 async def main() -> None:
-  config = local.LocalAgentConfig(
+  config = LocalAgentConfig(
       hooks=[
           on_start,
           on_end,
@@ -150,7 +149,7 @@ async def main() -> None:
       tools=[greet, broken_tool],
   )
 
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     print("--- Starting Interaction ---")
 
     # 1. Trigger Turn Hooks

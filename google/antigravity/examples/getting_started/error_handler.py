@@ -30,9 +30,8 @@ Criteria for correct script performance:
 import asyncio
 import logging
 
-from google.antigravity import agent
 from google.antigravity import types
-from google.antigravity.connections import local
+from google.antigravity import Agent, LocalAgentConfig
 from google.antigravity.hooks import hooks
 
 
@@ -75,12 +74,12 @@ async def main() -> None:
   print("🔌 Error Handling Example\n")
 
   # Create the agent configuration with the tool and hook.
-  config = local.LocalAgentConfig(
+  config = LocalAgentConfig(
       tools=[exploding_tool],
       hooks=[tool_error_handler],
   )
 
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     # Ask the agent to use the tool that we know will fail.
     prompt = "Use the exploding_tool with input 'test data'."
     print(f"User: {prompt}")

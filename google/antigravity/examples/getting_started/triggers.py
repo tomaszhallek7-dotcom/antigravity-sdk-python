@@ -33,10 +33,8 @@ Criteria for correct script performance:
 
 import asyncio
 
-from google.antigravity import agent
-from google.antigravity.connections import local
-from google.antigravity.triggers import helpers as trigger_helpers
-from google.antigravity.triggers import triggers as triggers_module
+from google.antigravity import Agent, LocalAgentConfig
+from google.antigravity.triggers import every, trigger, TriggerContext
 
 # ==============================================================================
 # 1. PERIODIC TRIGGER EXAMPLE: Customer Support Ticket Queue
@@ -49,7 +47,7 @@ _standby_active = False
 
 # Define a callback function for the periodic trigger.
 # The callback must be an async function that accepts a TriggerContext.
-async def _poll_queue_callback(ctx: triggers_module.TriggerContext) -> None:
+async def _poll_queue_callback(ctx: TriggerContext) -> None:
   """Polls the support ticket queue periodically for new tickets."""
   global _ticket_counter
 
@@ -87,9 +85,9 @@ async def _run_periodic_trigger_example() -> None:
   _standby_active = False
 
   # Configure a trigger that checks every 1 second for demonstration.
-  my_trigger = trigger_helpers.every(1, _poll_queue_callback)
+  my_trigger = every(1, _poll_queue_callback)
 
-  config = local.LocalAgentConfig(
+  config = LocalAgentConfig(
       system_instructions=(
           "You are a system operations and support assistant. You monitor a "
           "queue of incoming support tickets. When the user asks for updates, "
@@ -100,7 +98,7 @@ async def _run_periodic_trigger_example() -> None:
   )
 
   # Triggers are active only while inside the 'async with' session block.
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     # Turn 1: Instruct the agent to watch.
     prompt1 = (
         "Your task will be to standby and simply let me know if there are any "
@@ -142,8 +140,8 @@ _webhook_active = False
 
 # A custom trigger is any async function decorated with @triggers.trigger
 # that accepts a single TriggerContext argument.
-@triggers_module.trigger
-async def _webhook_listener(ctx: triggers_module.TriggerContext) -> None:
+@trigger
+async def _webhook_listener(ctx: TriggerContext) -> None:
   """Simulates a background push-based CI/CD webhook listener."""
 
   print("\n[WEBHOOK TRIGGER] Custom Webhook listener started...", flush=True)
@@ -180,7 +178,7 @@ async def _run_custom_trigger_example() -> None:
   _webhook_active = False
 
   # Register our custom webhook listener trigger directly.
-  config = local.LocalAgentConfig(
+  config = LocalAgentConfig(
       system_instructions=(
           "You are a CI/CD operations assistant. You monitor pipeline status "
           "via an external webhook trigger. When the user asks for updates, "
@@ -190,7 +188,7 @@ async def _run_custom_trigger_example() -> None:
       triggers=[_webhook_listener],
   )
 
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     # Turn 1: Set standby monitoring.
     prompt1 = (
         "Your task will be to standby and simply let me know if there are any "

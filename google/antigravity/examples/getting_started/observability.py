@@ -31,8 +31,7 @@ import asyncio
 import logging
 import sys
 
-from google.antigravity import agent
-from google.antigravity.connections import local
+from google.antigravity import Agent, LocalAgentConfig
 from google.antigravity.hooks import hooks
 
 # Enable DEBUG logging for the SDK to show detailed execution info.
@@ -53,12 +52,12 @@ async def audit_log_tool_call(data):
 
 
 async def main() -> None:
-  config = local.LocalAgentConfig(
+  config = LocalAgentConfig(
       tools=[get_weather],
       hooks=[audit_log_tool_call],
   )
 
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     prompt = "What is the weather in Seattle?"
     print(f"User: {prompt}")
 

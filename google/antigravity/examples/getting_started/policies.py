@@ -40,9 +40,8 @@ Criteria for correct script performance:
 
 import asyncio
 import pydantic
-from google.antigravity import agent
 from google.antigravity import types
-from google.antigravity.connections import local
+from google.antigravity import Agent, LocalAgentConfig
 from google.antigravity.hooks import policy
 
 
@@ -127,9 +126,9 @@ async def main() -> None:
       ),
   ]
 
-  config = local.LocalAgentConfig(policies=policies)
+  config = LocalAgentConfig(policies=policies)
 
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     print("\nChatting with agent...")
 
     # Try a safe command (should be allowed)

@@ -28,8 +28,7 @@ Criteria for correct script performance:
 import asyncio
 import os
 
-from google.antigravity import agent
-from google.antigravity.connections import local
+from google.antigravity import Agent, LocalAgentConfig
 
 
 async def main() -> None:
@@ -43,9 +42,9 @@ async def main() -> None:
   print(f"Loading skills from: {skill_path}")
 
   # Configure the agent with the skills path.
-  config = local.LocalAgentConfig(skills_paths=[skill_path])
+  config = LocalAgentConfig(skills_paths=[skill_path])
 
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     # Ask the agent what skills it has.
     prompt = "What available skills do you have?"
     print(f"User: {prompt}")

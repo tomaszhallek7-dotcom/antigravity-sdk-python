@@ -21,14 +21,13 @@ for input or clarification using the `AskQuestionHook`.
 import asyncio
 import sys
 
-from google.antigravity import agent
-from google.antigravity.connections import local
+from google.antigravity import Agent, LocalAgentConfig
 from google.antigravity.utils import interactive
 
 
 async def main() -> None:
   # Default config enables all tools, including ASK_QUESTION.
-  config = local.LocalAgentConfig(
+  config = LocalAgentConfig(
       system_instructions=(
           "When you need clarification or more information from the user to "
           "fulfill a request, you should use the `ask_question` tool to "
@@ -36,7 +35,7 @@ async def main() -> None:
       )
   )
 
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     # Register the hook to handle questions from the agent.
     my_agent.register_hook(interactive.AskQuestionHook())
 

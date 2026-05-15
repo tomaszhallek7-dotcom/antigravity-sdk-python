@@ -33,9 +33,8 @@ Criteria for correct script performance:
 import asyncio
 from typing import Any
 
-from google.antigravity import agent
 from google.antigravity import types
-from google.antigravity.connections import local
+from google.antigravity import Agent, LocalAgentConfig
 from google.antigravity.hooks import hooks
 
 _subagent_active = False
@@ -72,14 +71,14 @@ async def log_post_tool(data: Any):
 
 async def main() -> None:
   # Enable subagents in the config and add hooks for visibility.
-  config = local.LocalAgentConfig(
+  config = LocalAgentConfig(
       capabilities=types.CapabilitiesConfig(
           enable_subagents=True,
       ),
       hooks=[log_pre_tool, log_post_tool],
   )
 
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     # Prompt the agent to use a subagent to research and generate a lesson plan.
     prompt = (
         "Use a subagent to research the Google Antigravity SDK examples in the"

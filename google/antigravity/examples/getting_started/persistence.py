@@ -34,8 +34,7 @@ Criteria for correct script performance:
 import asyncio
 import tempfile
 
-from google.antigravity import agent
-from google.antigravity.connections import local
+from google.antigravity import Agent, LocalAgentConfig
 
 
 async def main() -> None:
@@ -46,8 +45,8 @@ async def main() -> None:
 
   # Specify `save_dir` to ensure conversation history and artifacts are
   # persisted to disk.
-  config1 = local.LocalAgentConfig(save_dir=save_dir)
-  async with agent.Agent(config1) as my_agent1:
+  config1 = LocalAgentConfig(save_dir=save_dir)
+  async with Agent(config1) as my_agent1:
     prompt1 = "Remember this: my favorite color is blue."
     print(f"User: {prompt1}")
     response1 = await my_agent1.chat(prompt1)
@@ -62,11 +61,11 @@ async def main() -> None:
   # By providing the exact same `save_dir` and the prior `conversation_id`,
   # the new agent instance automatically restores the previous conversation
   # history and context.
-  config2 = local.LocalAgentConfig(
+  config2 = LocalAgentConfig(
       conversation_id=conversation_id,
       save_dir=save_dir,
   )
-  async with agent.Agent(config2) as my_agent2:
+  async with Agent(config2) as my_agent2:
     prompt2 = "What is my favorite color?"
     print(f"User: {prompt2}")
     response2 = await my_agent2.chat(prompt2)

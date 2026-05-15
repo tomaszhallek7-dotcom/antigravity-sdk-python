@@ -48,9 +48,9 @@ Criteria for correct script performance:
 import asyncio
 import os
 import sys
-from google.antigravity import agent
+
 from google.antigravity import types
-from google.antigravity.connections import local
+from google.antigravity import Agent, LocalAgentConfig
 
 
 def check_style_guide(language: str) -> str:
@@ -101,12 +101,12 @@ async def run_templated_example():
       sections=[review_criteria, style_guide_instructions],
   )
 
-  config = local.LocalAgentConfig(
+  config = LocalAgentConfig(
       system_instructions=templated_si,
       tools=[check_style_guide],
   )
 
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     prompt = "Review this Python code: `def MY_FUNCTION(X): return X*2`"
     print(f"User: {prompt}")
     response = await my_agent.chat(prompt)
@@ -250,13 +250,13 @@ You have access to the `check_style_guide` tool. When reviewing Python code, alw
 
   custom_si = types.CustomSystemInstructions(text=final_si_prompt)
 
-  config = local.LocalAgentConfig(
+  config = LocalAgentConfig(
       system_instructions=custom_si,
       tools=[check_style_guide],
       skills_paths=skills,
   )
 
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     prompt = "Review this Python code: `def foo(x): return x+1`"
     print(f"User: {prompt}")
     response = await my_agent.chat(prompt)

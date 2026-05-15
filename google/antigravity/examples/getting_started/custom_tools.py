@@ -32,10 +32,8 @@ Criteria for correct script performance:
 import asyncio
 from collections import Counter
 
-from google.antigravity import agent
-from google.antigravity.connections import local
+from google.antigravity import Agent, LocalAgentConfig, ToolContext
 from google.antigravity.hooks import policy
-from google.antigravity.tools.tool_context import ToolContext
 
 
 # 1. Define a simple tool
@@ -87,7 +85,7 @@ def record_fruit(sku: str, count: int, ctx: ToolContext) -> str:
 
 async def main() -> None:
   # Configure the agent with both tools.
-  config = local.LocalAgentConfig(
+  config = LocalAgentConfig(
       tools=[lookup_fruit_sku, record_fruit],
       system_instructions=(
           "You keep track of fruit inventory. To record fruits, you MUST"
@@ -102,7 +100,7 @@ async def main() -> None:
       ],
   )
 
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     print("=== Custom Tools Demo ===")
 
     # Test simple tool

@@ -28,9 +28,8 @@ Criteria for correct script performance:
 import asyncio
 import os
 
-from google.antigravity import agent
 from google.antigravity import types
-from google.antigravity.connections import local
+from google.antigravity import Agent, LocalAgentConfig
 
 
 async def main() -> None:
@@ -42,8 +41,8 @@ async def main() -> None:
 
   # Multimodal Input: Image
   print("--- Multimodal Input: Image ---")
-  config = local.LocalAgentConfig()
-  async with agent.Agent(config) as my_agent:
+  config = LocalAgentConfig()
+  async with Agent(config) as my_agent:
     image = types.Image.from_file(image_path)
     prompt = ["What is in this image?", image]
     print(f"User: {prompt[0]}")
@@ -52,7 +51,7 @@ async def main() -> None:
 
   # Multimodal Input: Document
   print("--- Multimodal Input: Document ---")
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     doc = types.Document.from_file(doc_path)
     prompt = ["Summarize this document", doc]
     print(f"User: {prompt[0]}")
@@ -61,13 +60,13 @@ async def main() -> None:
 
   # Multimodal Output: Image Generation
   print("--- Multimodal Output: Image Generation ---")
-  gen_config = local.LocalAgentConfig(
+  gen_config = LocalAgentConfig(
       capabilities=types.CapabilitiesConfig(
           enabled_tools=[types.BuiltinTools.GENERATE_IMAGE]
       ),
   )
 
-  async with agent.Agent(gen_config) as gen_agent:
+  async with Agent(gen_config) as gen_agent:
     prompt = (
         "Generate an image of a futuristic city, name it 'future_city'. "
         "Please provide the file path to the generated image."

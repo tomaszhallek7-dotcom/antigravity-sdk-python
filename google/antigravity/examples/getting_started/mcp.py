@@ -21,16 +21,15 @@ using stdio, SSE, and Streamable HTTP transports.
 import asyncio
 import os
 
-from google.antigravity import agent
 from google.antigravity import types
-from google.antigravity.connections import local
+from google.antigravity import Agent, LocalAgentConfig
 from google.antigravity.examples.resources import mcp_server
 
 
 async def mcp_stdio(mcp_server_path: str):
   """Showcases the Stdio transport."""
   print("\n--- Showcasing Stdio Transport ---")
-  config = local.LocalAgentConfig(
+  config = LocalAgentConfig(
       mcp_servers=[
           types.McpStdioServer(
               command="python3",
@@ -39,7 +38,7 @@ async def mcp_stdio(mcp_server_path: str):
       ]
   )
 
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     prompt = "Use the pirate_multiply tool to multiply 5 and 7."
     print(f"User: {prompt}")
     response = await my_agent.chat(prompt)
@@ -50,11 +49,11 @@ async def mcp_sse():
   """Showcases the SSE transport."""
   print("\n--- Showcasing SSE Transport ---")
   async with mcp_server.run("sse") as port:
-    config = local.LocalAgentConfig(
+    config = LocalAgentConfig(
         mcp_servers=[types.McpSseServer(url=f"http://localhost:{port}/sse")]
     )
 
-    async with agent.Agent(config) as my_agent:
+    async with Agent(config) as my_agent:
       prompt = "Use the pirate_multiply tool to multiply 5 and 7."
       print(f"User: {prompt}")
       response = await my_agent.chat(prompt)
@@ -65,13 +64,13 @@ async def mcp_http():
   """Showcases the Streamable HTTP transport."""
   print("\n--- Showcasing Streamable HTTP Transport ---")
   async with mcp_server.run("streamable-http") as port:
-    config = local.LocalAgentConfig(
+    config = LocalAgentConfig(
         mcp_servers=[
             types.McpStreamableHttpServer(url=f"http://localhost:{port}/mcp")
         ]
     )
 
-    async with agent.Agent(config) as my_agent:
+    async with Agent(config) as my_agent:
       prompt = "Use the pirate_multiply tool to multiply 5 and 7."
       print(f"User: {prompt}")
       response = await my_agent.chat(prompt)

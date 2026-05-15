@@ -46,10 +46,8 @@ Criteria for correct script performance:
 import asyncio
 import logging
 
-from google.antigravity.agent import Agent
-from google.antigravity.connections.local.local_connection_config import LocalAgentConfig
-from google.antigravity.triggers.helpers import every
-from google.antigravity.triggers.triggers import TriggerContext
+from google.antigravity import Agent, LocalAgentConfig
+from google.antigravity.triggers import every, TriggerContext
 
 _PASS_TOKEN = "[PASS]"
 _MAX_ROUNDS = 4

@@ -23,14 +23,13 @@ Criteria for correct script performance:
 
 import asyncio
 
-from google.antigravity import agent
-from google.antigravity.connections import local
+from google.antigravity import Agent, LocalAgentConfig
 
 
 async def main() -> None:
-  config = local.LocalAgentConfig()
+  config = LocalAgentConfig()
 
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     prompt = (
         "Solve this riddle: I speak without a mouth and hear without ears. I"
         " have no body, but I come alive with wind. What am I? Explain your"

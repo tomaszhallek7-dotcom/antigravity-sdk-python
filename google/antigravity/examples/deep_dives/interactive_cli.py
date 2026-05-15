@@ -37,8 +37,7 @@ from absl import flags
 from absl import logging
 
 from google.antigravity import types
-from google.antigravity.agent import Agent
-from google.antigravity.connections.local.local_connection_config import LocalAgentConfig
+from google.antigravity import Agent, LocalAgentConfig
 from google.antigravity.hooks import policy
 from google.antigravity.utils import interactive
 from google.antigravity.utils.interactive import async_input

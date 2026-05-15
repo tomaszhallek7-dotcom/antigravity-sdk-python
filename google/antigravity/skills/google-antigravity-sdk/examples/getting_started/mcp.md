@@ -1,5 +1,6 @@
 <!-- disableFinding(LINK_RELATIVE_G3DOC) -->
 <!-- disableFinding(LINE_OVER_80) -->
+
 # Model Context Protocol (MCP)
 
 This example demonstrates how to connect an agent to an external Model Context
@@ -32,11 +33,7 @@ mcp.run()
 To connect the agent to this MCP server via `stdio` transport:
 
 ```python
-from google.antigravity import types
-from google.antigravity.agent import Agent
-from google.antigravity.connections.local.local_connection_config import (
-    LocalAgentConfig,
-)
+from google.antigravity import Agent, LocalAgentConfig, types
 
 mcp_servers = [
     types.McpStdioServer(
@@ -58,11 +55,7 @@ You can also connect to a remote MCP server running as a web service using the
 `sse` transport:
 
 ```python
-from google.antigravity import types
-from google.antigravity.agent import Agent
-from google.antigravity.connections.local.local_connection_config import (
-    LocalAgentConfig,
-)
+from google.antigravity import Agent, LocalAgentConfig, types
 
 mcp_servers = [
     types.McpSseServer(

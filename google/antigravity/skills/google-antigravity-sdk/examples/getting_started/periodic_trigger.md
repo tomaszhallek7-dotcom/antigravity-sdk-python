@@ -10,8 +10,7 @@ changes) and can push messages to the agent.
 import logging
 import asyncio
 from google.antigravity import Agent, LocalAgentConfig
-from google.antigravity.triggers import every, on_file_change
-from google.antigravity.triggers.triggers import TriggerContext
+from google.antigravity.triggers import every, on_file_change, TriggerContext
 
 # =============================================================================
 # 1. Periodic Trigger (using `every` helper)

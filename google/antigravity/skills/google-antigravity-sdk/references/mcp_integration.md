@@ -32,9 +32,7 @@ locally. This is configured in `LocalAgentConfig` using `mcp_servers`.
 ### Example
 
 ```python
-from google.antigravity import types
-from google.antigravity.agent import Agent
-from google.antigravity.connections.local.local_connection_config import LocalAgentConfig
+from google.antigravity import Agent, LocalAgentConfig, types
 
 mcp_servers = [
     types.McpStdioServer(
@@ -58,9 +56,7 @@ web service.
 ### Example
 
 ```python
-from google.antigravity import types
-from google.antigravity.agent import Agent
-from google.antigravity.connections.local.local_connection_config import LocalAgentConfig
+from google.antigravity import Agent, LocalAgentConfig, types
 
 mcp_servers = [
     types.McpSseServer(

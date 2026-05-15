@@ -27,16 +27,15 @@ Criteria for correct script performance:
 
 import asyncio
 
-from google.antigravity import agent
-from google.antigravity.connections import local
+from google.antigravity import Agent, LocalAgentConfig
 
 
 async def main() -> None:
   # To explicitly set the model, pass it to LocalAgentConfig:
   # config = LocalAgentConfig(model="gemini-3-flash-preview")
-  config = local.LocalAgentConfig()
+  config = LocalAgentConfig()
 
-  async with agent.Agent(config) as my_agent:
+  async with Agent(config) as my_agent:
     prompt = "Say 'Hello World!'"
     print(f"User: {prompt}")
 

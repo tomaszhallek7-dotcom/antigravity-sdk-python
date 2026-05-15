@@ -45,8 +45,7 @@ Criteria for correct script performance:
 
 import asyncio
 import pydantic
-from google.antigravity import agent
-from google.antigravity.connections import local
+from google.antigravity import Agent, LocalAgentConfig
 
 
 class ActionItem(pydantic.BaseModel):
@@ -89,12 +88,12 @@ async def fetch_unstructured_meeting_notes(meeting_id: str) -> str:
 async def main() -> None:
   """Runs the structured output example."""
   print("--- Starting main ---")
-  config = local.LocalAgentConfig(
+  config = LocalAgentConfig(
       tools=[fetch_unstructured_meeting_notes],
       response_schema=MeetingSummary,
   )
 
-  async with agent.Agent(config) as meeting_agent:
+  async with Agent(config) as meeting_agent:
     prompt = (
         "Use the fetch_unstructured_meeting_notes tool to retrieve notes for"
         " 'meeting-2026-05' and return the meeting summary with the appropriate"
