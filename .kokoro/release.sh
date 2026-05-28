@@ -81,7 +81,15 @@ if [[ -n "${PUBLISH_PREBUILT_VERSION:-}" ]]; then
 
   GCS_SOURCE="gs://agy-sdk-wheels/v${VERSION}"
   echo "--- Downloading pre-built wheels from ${GCS_SOURCE} ---"
+
+  # Impersonate the agy-sdk-stager service account keylessly using Kokoro's ambient credentials
+  echo "--- Activating agy-sdk-stager impersonation ---"
+  gcloud config set auth/impersonate_service_account agy-sdk-stager@agy-sdk.iam.gserviceaccount.com
+
   gcloud storage cp "${GCS_SOURCE}"/*.whl "${DIST_DIR}/"
+
+  # Unset stager impersonation to return to default credentials
+  gcloud config unset auth/impersonate_service_account
 else
   if [[ -z "${VERSION}" ]]; then
     VERSION=$(sed -n '/^\[project\]/,/^\[/p' pyproject.toml | grep -E '^version\s*=' | cut -d'"' -f2)
