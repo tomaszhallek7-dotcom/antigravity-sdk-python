@@ -83,28 +83,6 @@ class TestMcpBridge(unittest.TestCase):
 
       asyncio.run(run_test())
 
-  def test_connect_sse(self):
-    """Verifies that connect_sse correctly configures SSE transport parameters."""
-    bridge = McpBridge()
-
-    patch_target = (
-        "google.antigravity.mcp.bridge.ClientSessionGroup"
-    )
-    with mock.patch(patch_target) as mock_group_cls:
-      mock_session_group = mock.MagicMock(spec=ClientSessionGroup)
-      mock_group_cls.return_value = mock_session_group
-      mock_session_group.__aenter__ = mock.AsyncMock(
-          return_value=mock_session_group
-      )
-      mock_session_group.connect_to_server = mock.AsyncMock()
-      mock_session_group.tools = {}
-
-      async def run_test():
-        await bridge.connect_sse("http://localhost:8080/sse")
-        mock_session_group.connect_to_server.assert_called_once()
-
-      asyncio.run(run_test())
-
   def test_connect_streamable_http(self):
     """Verifies that connect_streamable_http correctly configures HTTP transport parameters."""
     bridge = McpBridge()
@@ -147,41 +125,29 @@ class TestMcpBridge(unittest.TestCase):
     bridge = McpBridge()
 
     bridge.connect_stdio = mock.AsyncMock()
-    bridge.connect_sse = mock.AsyncMock()
     bridge.connect_streamable_http = mock.AsyncMock()
 
     async def run_test():
       # Test stdio
-      stdio_cfg = mock.MagicMock()
-      stdio_cfg.type = "stdio"
-      stdio_cfg.name = "stdio_math"
-      stdio_cfg.command = "cmd"
-      stdio_cfg.args = ["arg"]
+      stdio_cfg = sdk_types.McpStdioServer(
+          name="stdio_math",
+          command="cmd",
+          args=["arg"],
+      )
       await bridge.connect(stdio_cfg)
       bridge.connect_stdio.assert_called_once_with(
           "cmd", ["arg"], server_cfg=stdio_cfg
       )
 
-      # Test sse
-      sse_cfg = mock.MagicMock()
-      sse_cfg.type = "sse"
-      sse_cfg.name = "sse_math"
-      sse_cfg.url = "url"
-      sse_cfg.headers = {"h": "v"}
-      await bridge.connect(sse_cfg)
-      bridge.connect_sse.assert_called_once_with(
-          "url", {"h": "v"}, server_cfg=sse_cfg
-      )
-
       # Test http
-      http_cfg = mock.MagicMock()
-      http_cfg.type = "http"
-      http_cfg.name = "http_math"
-      http_cfg.url = "url2"
-      http_cfg.headers = None
-      http_cfg.timeout = 10.0
-      http_cfg.sse_read_timeout = 20.0
-      http_cfg.terminate_on_close = False
+      http_cfg = sdk_types.McpStreamableHttpServer(
+          name="http_math",
+          url="url2",
+          headers=None,
+          timeout=10.0,
+          sse_read_timeout=20.0,
+          terminate_on_close=False,
+      )
       await bridge.connect(http_cfg)
       bridge.connect_streamable_http.assert_called_once_with(
           url="url2",

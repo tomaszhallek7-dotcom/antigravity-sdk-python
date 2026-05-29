@@ -26,7 +26,6 @@ from typing import Any, Callable
 
 from mcp.client import stdio
 from mcp.client.session_group import ClientSessionGroup
-from mcp.client.session_group import SseServerParameters
 from mcp.client.session_group import StreamableHttpParameters
 
 from google.antigravity import types
@@ -140,15 +139,11 @@ class McpBridge:
     Raises:
       ValueError: If the server configuration type is unsupported.
     """
-    if server_cfg.type == "stdio":
+    if isinstance(server_cfg, types.McpStdioServer):
       await self.connect_stdio(
           server_cfg.command, server_cfg.args, server_cfg=server_cfg
       )
-    elif server_cfg.type == "sse":
-      await self.connect_sse(
-          server_cfg.url, server_cfg.headers, server_cfg=server_cfg
-      )
-    elif server_cfg.type == "http":
+    elif isinstance(server_cfg, types.McpStreamableHttpServer):
       await self.connect_streamable_http(
           url=server_cfg.url,
           headers=server_cfg.headers,
@@ -158,7 +153,7 @@ class McpBridge:
           server_cfg=server_cfg,
       )
     else:
-      raise ValueError(f"Unsupported MCP server type: {server_cfg.type}")
+      raise ValueError(f"Unsupported MCP server type: {server_cfg}")
 
   async def connect_stdio(
       self,
@@ -174,24 +169,6 @@ class McpBridge:
       server_cfg: Optional server configuration.
     """
     params = stdio.StdioServerParameters(command=command, args=list(args))
-    await self._connect(params, server_cfg)
-
-  async def connect_sse(
-      self,
-      url: str,
-      headers: Mapping[str, str] | None = None,
-      server_cfg: types.McpServerConfig | None = None,
-  ):
-    """Connects to a remote MCP server over SSE.
-
-    Args:
-      url: The URL of the SSE endpoint.
-      headers: Optional headers to send with the connection request.
-      server_cfg: Optional server configuration.
-    """
-    params = SseServerParameters(
-        url=url, headers=dict(headers) if headers is not None else None
-    )
     await self._connect(params, server_cfg)
 
   async def connect_streamable_http(
@@ -226,7 +203,6 @@ class McpBridge:
       self,
       params: (
           stdio.StdioServerParameters
-          | SseServerParameters
           | StreamableHttpParameters
       ),
       server_cfg: types.McpServerConfig | None = None,

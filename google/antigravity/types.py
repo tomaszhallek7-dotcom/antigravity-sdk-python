@@ -42,7 +42,6 @@ __all__ = [
     "CapabilitiesConfig",
     "BaseMcpServerConfig",
     "McpStdioServer",
-    "McpSseServer",
     "McpStreamableHttpServer",
     "McpServerConfig",
     "ToolCall",
@@ -422,31 +421,6 @@ class McpStdioServer(BaseMcpServerConfig):
   disabled_tools: list[str] | None = None
 
 
-class McpSseServer(BaseMcpServerConfig):
-  """Configuration for an MCP server connected via SSE.
-
-  Attributes:
-    url: The URL of the SSE endpoint.
-    name: Unique identifier for this MCP server.
-    type: The type of connection, always "sse".
-    headers: Optional headers to send with the connection request.
-    enabled_tools: Explicit allowlist of tools to enable. Mutually exclusive
-      with disabled_tools. When None, all tools from the server are enabled.
-      Only enabled tools are exposed to the model; others are hidden entirely
-      from the model's context, saving tokens.
-    disabled_tools: Explicit denylist of tools to disable. Mutually exclusive
-      with enabled_tools. When None, all tools from the server are enabled.
-      Disabled tools are removed from the model's context entirely, saving
-      tokens and preventing the model from even considering them.
-  """
-
-  url: str
-  type: Literal["sse"] = "sse"
-  headers: dict[str, str] | None = None
-  enabled_tools: list[str] | None = None
-  disabled_tools: list[str] | None = None
-
-
 class McpStreamableHttpServer(BaseMcpServerConfig):
   """Configuration for an MCP server connected via Streamable HTTP.
 
@@ -478,7 +452,7 @@ class McpStreamableHttpServer(BaseMcpServerConfig):
   disabled_tools: list[str] | None = None
 
 
-McpServerConfig = McpStdioServer | McpSseServer | McpStreamableHttpServer
+McpServerConfig = McpStdioServer | McpStreamableHttpServer
 
 
 # =============================================================================

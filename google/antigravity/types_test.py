@@ -1306,12 +1306,6 @@ class McpServerConfigTest(parameterized.TestCase):
           {"name": "stdio_server", "command": "node", "args": ["index.js"]},
       ),
       (
-          "sse",
-          types.McpSseServer,
-          {"name": "sse_server", "url": "http://localhost/sse"},
-          {"name": "sse_server", "url": "http://localhost/sse"},
-      ),
-      (
           "http",
           types.McpStreamableHttpServer,
           {"name": "http_server", "url": "http://localhost/http"},
@@ -1338,7 +1332,6 @@ class McpServerConfigTest(parameterized.TestCase):
 
   @parameterized.named_parameters(
       ("stdio", types.McpStdioServer, {"command": "node"}),
-      ("sse", types.McpSseServer, {"url": "http://localhost/sse"}),
       ("http", types.McpStreamableHttpServer, {"url": "http://localhost/http"}),
   )
   def test_server_missing_name_raises(self, server_cls, init_kwargs):
@@ -1378,28 +1371,6 @@ class McpServerConfigTest(parameterized.TestCase):
           "disabled_tools",
           ["tool2"],
       ),
-      (
-          "sse_enabled",
-          types.McpSseServer,
-          {
-              "name": "sse_server",
-              "url": "http://localhost/sse",
-              "enabled_tools": ["tool1"],
-          },
-          "enabled_tools",
-          ["tool1"],
-      ),
-      (
-          "sse_disabled",
-          types.McpSseServer,
-          {
-              "name": "sse_server",
-              "url": "http://localhost/sse",
-              "disabled_tools": ["tool2"],
-          },
-          "disabled_tools",
-          ["tool2"],
-      ),
   )
   def test_server_construction_with_filtering(
       self, server_cls, init_kwargs, expected_attr, expected_val
@@ -1425,26 +1396,6 @@ class McpServerConfigTest(parameterized.TestCase):
           {
               "name": "stdio_server",
               "command": "node",
-              "enabled_tools": ["tool1"],
-              "disabled_tools": ["tool1"],
-          },
-      ),
-      (
-          "sse_different_tools",
-          types.McpSseServer,
-          {
-              "name": "sse_server",
-              "url": "http://localhost/sse",
-              "enabled_tools": ["tool1"],
-              "disabled_tools": ["tool2"],
-          },
-      ),
-      (
-          "sse_same_tool",
-          types.McpSseServer,
-          {
-              "name": "sse_server",
-              "url": "http://localhost/sse",
               "enabled_tools": ["tool1"],
               "disabled_tools": ["tool1"],
           },

@@ -765,7 +765,6 @@ class AgentTest(unittest.IsolatedAsyncioTestCase):
         types.McpStdioServer(
             name="stdio_server", command="python3", args=["server.py"]
         ),
-        types.McpSseServer(name="sse_server", url="http://localhost:8000/sse"),
         types.McpStreamableHttpServer(
             name="http_server", url="http://localhost:8000/http"
         ),
@@ -778,11 +777,10 @@ class AgentTest(unittest.IsolatedAsyncioTestCase):
     )
     async with agent.Agent(config) as ag:
       mock_mcp_bridge.assert_called_once_with()
-      self.assertEqual(mock_bridge_instance.connect.call_count, 3)
+      self.assertEqual(mock_bridge_instance.connect.call_count, 2)
       mock_bridge_instance.connect.assert_has_calls([
           mock.call(mcp_servers[0]),
           mock.call(mcp_servers[1]),
-          mock.call(mcp_servers[2]),
       ])
 
       _, kwargs = mock_strategy_class.call_args
